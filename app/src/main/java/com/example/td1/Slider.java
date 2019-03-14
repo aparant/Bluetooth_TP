@@ -12,7 +12,7 @@ import android.view.View;
 public class Slider extends View {
     final static float DEFAULT_BAR_WIDTH=10;
     final static float DEFAULT_BAR_LENGTH=100;
-    final static float DEFAULT_CURSOR_DIAMETER=10;
+    final static float DEFAULT_CURSOR_DIAMETER=20;
 
     //Valeur du slider
     private float mValue=0;
@@ -35,7 +35,7 @@ public class Slider extends View {
     private int mBarColor;
     private int mValueBarColor;
 
-    private boolean mEnable=true;
+    private boolean mEnabled =true;
 
     public Slider(Context context){
         super(context);
@@ -47,7 +47,7 @@ public class Slider extends View {
         init(context,attrs);
     }
 
-    // /** + espace pour avoir la javadoc
+    // /** + espace + entrée pour avoir la javadoc
     /**
      * Transforme la valeur du slider en un ratio
      * @param value : valeur du slider
@@ -57,6 +57,11 @@ public class Slider extends View {
         return (value-mMin)/(mMax-mMin);
     }
 
+    /**
+     *
+     * @param ratio
+     * @return
+     */
     private float ratioToValue(float ratio){
         return ratio*(mMax-mMin)+mMin;
     }
@@ -75,8 +80,49 @@ public class Slider extends View {
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int suggestedWidth, suggestedHeigth;
+        int width,height;
+        suggestedWidth=Math.max((int)DEFAULT_BAR_WIDTH,(int)DEFAULT_CURSOR_DIAMETER);
+        suggestedWidth=Math.max(getSuggestedMinimumWidth(),suggestedWidth+getPaddingLeft()+getPaddingRight());
+        suggestedHeigth=Math.max(getSuggestedMinimumHeight(),(int)DEFAULT_BAR_LENGTH+getPaddingTop()+getPaddingBottom());
+        width= resolveSize(suggestedWidth,suggestedHeigth);
+        height=resolveSize(suggestedHeigth,suggestedWidth);
+
+        setMeasuredDimension(width,height);
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        Point p1,p2;
+        p1=toPos(mMin);
+        p2=toPos(mMax);
+        canvas.drawLine(p1.x,p1.y,p2.x,p2.y,mBarPaint);
+
+        p1=toPos(mMax-10);
+        canvas.drawLine(p1.x,p1.y,p2.x,p2.y,mValueBarPaint);
+
+        canvas.drawCircle(p2.x,p2.y,mCursorDiameter/2,mCursorPaint);
+
+       /*canvas.drawLine(getPaddingLeft()+mCursorDiameter/2,
+                getPaddingTop(),
+                getPaddingLeft()+mCursorDiameter/2,
+                getPaddingTop()+mBarLength,
+                mBarPaint);
+        canvas.drawLine(getPaddingLeft()+mCursorDiameter/2,
+                getPaddingTop()+mBarLength-30,
+                getPaddingLeft()+mCursorDiameter/2,
+                getPaddingTop()+mBarLength,
+                mValueBarPaint);
+
+
+        canvas.drawCircle(Math.max(mCursorDiameter,mBarWidth)/2+getPaddingLeft(),
+                mCursorDiameter/2+getPaddingTop(),
+                mCursorDiameter/2,
+                mCursorPaint);*/
+
     }
 
     private void init(Context context, AttributeSet attrs){
@@ -100,14 +146,14 @@ public class Slider extends View {
        //arrondi angle
         mBarPaint.setStrokeCap(Paint.Cap.ROUND);
 
-        mDisableColor= ContextCompat.getColor(context,R.color.colorAccent);
+        mDisableColor= ContextCompat.getColor(context,R.color.colorDisabled);
         mCursorColor=ContextCompat.getColor(context,R.color.colorAccent);
-        mBarColor=ContextCompat.getColor(context,R.color.colorAccent);
-        mValueBarColor=ContextCompat.getColor(context,R.color.colorAccent);
+        mBarColor=ContextCompat.getColor(context,R.color.colorPrimary);
+        mValueBarColor=ContextCompat.getColor(context,R.color.colorSecondary);
 
-       if(mEnable){
+       if(mEnabled){
            mCursorPaint.setColor(mCursorColor);
-           mBarPaint.setColor(mCursorColor);
+           mBarPaint.setColor(mBarColor);
            mValueBarPaint.setColor(mValueBarColor);
        }
        else{
@@ -116,6 +162,10 @@ public class Slider extends View {
 
        mBarPaint.setStrokeWidth(mBarWidth);
        mValueBarPaint.setStrokeWidth(mBarWidth);
+
+       //stocker longueur et largeur minimale que l'on souhaite
+        setMinimumWidth((int)dpToPixel(DEFAULT_BAR_WIDTH+getPaddingLeft()+getPaddingRight()+DEFAULT_CURSOR_DIAMETER));
+        setMinimumHeight((int)dpToPixel(DEFAULT_BAR_LENGTH+getPaddingTop()+getPaddingBottom()+DEFAULT_CURSOR_DIAMETER));
     }
 
     private float dpToPixel(float valueInDp){
