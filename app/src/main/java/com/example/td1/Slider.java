@@ -100,10 +100,10 @@ public class Slider extends View {
        //arrondi angle
         mBarPaint.setStrokeCap(Paint.Cap.ROUND);
 
-        mDisableColor= ContextCompat.getColor(context,R.colorDisabled);
-        mCursorColor=ContextCompat.getColor(context,R.colorPrimary);
-        mBarColor=ContextCompat.getColor(context,R.colorPrimaryDark);
-        mValueBarColor=ContextCompat.getColor(context,R.colorSecondary);
+        mDisableColor= ContextCompat.getColor(context,R.color.colorAccent);
+        mCursorColor=ContextCompat.getColor(context,R.color.colorAccent);
+        mBarColor=ContextCompat.getColor(context,R.color.colorAccent);
+        mValueBarColor=ContextCompat.getColor(context,R.color.colorAccent);
 
        if(mEnable){
            mCursorPaint.setColor(mCursorColor);
