@@ -4,10 +4,15 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 
 public class Slider extends View {
     final static float DEFAULT_BAR_WIDTH=10;
@@ -15,9 +20,9 @@ public class Slider extends View {
     final static float DEFAULT_CURSOR_DIAMETER=20;
 
     //Valeur du slider
-    private float mValue=0;
     private float mMin=0;
     private float mMax=100;
+    private float mValue=0;
 
     // attribut de dimension
     private float mBarLength;
@@ -37,6 +42,9 @@ public class Slider extends View {
 
     private boolean mEnabled =true;
 
+
+    private SliderChangeListener mSliderChangeListener;
+
     public Slider(Context context){
         super(context);
         init(context,null);
@@ -45,6 +53,14 @@ public class Slider extends View {
     public Slider(Context context, AttributeSet attrs){
         super(context,attrs);
         init(context,attrs);
+    }
+
+    public void setSliderChangeListener(SliderChangeListener listener){
+        mSliderChangeListener=listener;
+    }
+
+    public float getValue(){
+        return mValue;
     }
 
     // /** + espace + entrée pour avoir la javadoc
@@ -69,7 +85,7 @@ public class Slider extends View {
     private Point toPos(float value){
         int x,y;
         x=(int)Math.max(mCursorDiameter,mBarWidth)/2+getPaddingLeft();
-        y=(int)(valueToRatio(value)*mBarLength+mCursorDiameter/2)+getPaddingTop();
+        y=(int)((1-valueToRatio(value))*mBarLength+mCursorDiameter/2)+getPaddingTop();
         return new Point(x,y);
     }
 
@@ -93,37 +109,52 @@ public class Slider extends View {
         setMeasuredDimension(width,height);
     }
 
+    private void updateSlider(MotionEvent event){
+        float x=event.getX();
+        float y=event.getY();
+        Point touch=new Point((int)x,(int)y);
+        mValue=toValue(touch);
+        if(mValue>=100) mValue=100;
+        if(mValue<=0) mValue=0;
+    }
+
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int action=event.getAction();
+        switch (action){
+        case MotionEvent.ACTION_MOVE:
+           updateSlider(event);
+            invalidate();
+            mSliderChangeListener.onChange();
+            return true;
+         case MotionEvent.ACTION_DOWN:
+             return true;
+         default:
+            //return super.onTouchEvent(event);
+            return false;
+        }
+
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         Point p1,p2;
+        Point posCircle;
         p1=toPos(mMin);
         p2=toPos(mMax);
         canvas.drawLine(p1.x,p1.y,p2.x,p2.y,mBarPaint);
 
-        p1=toPos(mMax-10);
-        canvas.drawLine(p1.x,p1.y,p2.x,p2.y,mValueBarPaint);
+        p2=toPos(mMin+10);
+        canvas.drawLine(p2.x,p2.y,p1.x,p1.y,mValueBarPaint);
 
-        canvas.drawCircle(p2.x,p2.y,mCursorDiameter/2,mCursorPaint);
-
-       /*canvas.drawLine(getPaddingLeft()+mCursorDiameter/2,
-                getPaddingTop(),
-                getPaddingLeft()+mCursorDiameter/2,
-                getPaddingTop()+mBarLength,
-                mBarPaint);
-        canvas.drawLine(getPaddingLeft()+mCursorDiameter/2,
-                getPaddingTop()+mBarLength-30,
-                getPaddingLeft()+mCursorDiameter/2,
-                getPaddingTop()+mBarLength,
-                mValueBarPaint);
-
-
-        canvas.drawCircle(Math.max(mCursorDiameter,mBarWidth)/2+getPaddingLeft(),
-                mCursorDiameter/2+getPaddingTop(),
-                mCursorDiameter/2,
-                mCursorPaint);*/
+        posCircle=toPos(mValue);
+        canvas.drawCircle(posCircle.x,posCircle.y,mCursorDiameter/2,mCursorPaint);
 
     }
+
+
 
     private void init(Context context, AttributeSet attrs){
         mBarLength=dpToPixel(DEFAULT_BAR_LENGTH);
@@ -170,5 +201,54 @@ public class Slider extends View {
 
     private float dpToPixel(float valueInDp){
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,valueInDp,getResources().getDisplayMetrics());
+    }
+
+
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        return new SavedState(super.onSaveInstanceState(),mValue);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if(!(state instanceof SavedState)){
+            super.onRestoreInstanceState(state);
+            return;
+        }
+        mValue=((SavedState) state).sliderValue;
+        super.onRestoreInstanceState(((SavedState)state).getSuperState());
+        super.onRestoreInstanceState(state);
+    }
+
+
+    static class SavedState extends BaseSavedState{
+        private float sliderValue;
+        public static final  Parcelable.Creator<SavedState> CREATOR=
+                new Parcelable.Creator<SavedState>(){
+                    public SavedState createFromParcel(Parcel in){
+                        return new SavedState(in);
+                    }
+                    public SavedState[] newArray(int size){
+                        return new SavedState[size];
+                    }
+                };
+        private SavedState(Parcel source){
+            super(source);
+            sliderValue=source.readFloat();
+        }
+        public SavedState(Parcelable superState,float value){
+            super(superState);
+            sliderValue=value;
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeFloat(sliderValue);
+        }
+    }
+    public interface SliderChangeListener{
+        void onChange();
     }
 }
