@@ -45,11 +45,20 @@ public class Slider extends View {
 
     private SliderChangeListener mSliderChangeListener;
 
+    /**
+     * Constructeur statique du Slider utilisant un constructeur de View
+     * @param context
+     */
     public Slider(Context context){
         super(context);
         init(context,null);
     }
 
+    /**
+     * Constructeur dynamique du Slider utilisant un constructeur de View
+     * @param context
+     * @param attrs
+     */
     public Slider(Context context, AttributeSet attrs){
         super(context,attrs);
         init(context,attrs);
@@ -59,29 +68,38 @@ public class Slider extends View {
         mSliderChangeListener=listener;
     }
 
+    /**
+     * Accesseur de la valeur du Slider
+     * @return valeur du Slider
+     */
     public float getValue(){
         return mValue;
     }
 
-    // /** + espace + entrée pour avoir la javadoc
+
     /**
-     * Transforme la valeur du slider en un ratio
-     * @param value : valeur du slider
-     * @return ratio entre 0 et 1
+     * Transforme la valeur en entrée en ratio
+      * @param value
+     * @return Le ratio de la valeur en entrée par rapport au min max définit
      */
     private float valueToRatio(float value){
         return (value-mMin)/(mMax-mMin);
     }
 
     /**
-     *
+     * Retourne une valeur selon le ration en entrée
      * @param ratio
-     * @return
+     * @return La valeur selon le ration en entrée
      */
     private float ratioToValue(float ratio){
         return ratio*(mMax-mMin)+mMin;
     }
 
+    /**
+     * Permet d'avoir les coordonnées de la valeur en entrée sur le Slider
+     * @param value
+     * @return Coordonnées d'un point sur le Slider
+     */
     private Point toPos(float value){
         int x,y;
         x=(int)Math.max(mCursorDiameter,mBarWidth)/2+getPaddingLeft();
@@ -89,12 +107,22 @@ public class Slider extends View {
         return new Point(x,y);
     }
 
+    /**
+     * Permet d'avoir la valeur du Slider selon les coordonnées du point du Slider
+     * @param position du curseur du Slider
+     * @return la valeur du Slider
+     */
     private float toValue(Point position){
         float ratio;
         ratio=1-(position.y-getPaddingTop()-mCursorDiameter/2)/mBarLength;
         return ratioToValue(ratio);
     }
 
+    /**
+     * Permet d'avoir la taille voulue du Slider pour l'afficher en entier
+     * @param widthMeasureSpec largeur voulue du Slider
+     * @param heightMeasureSpec hauteur voulue du Slider
+     */
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -109,6 +137,10 @@ public class Slider extends View {
         setMeasuredDimension(width,height);
     }
 
+    /**
+     * Permet de redessiner le Slider quand il y a un changement de valeur du curseur
+     * @param event évènement de déplacement sur l'écran
+     */
     private void updateSlider(MotionEvent event){
         float x=event.getX();
         float y=event.getY();
@@ -118,7 +150,11 @@ public class Slider extends View {
         if(mValue<=0) mValue=0;
     }
 
-
+    /**
+     * Permet d'effectuer les actions correspondantes à un évènement de toucher
+     * @param event peut être un appui ou un déplacement de doigt sur l'écran
+     * @return l'action à été effectuée
+     */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action=event.getAction();
@@ -137,6 +173,10 @@ public class Slider extends View {
 
     }
 
+    /**
+     * Permet de dessiner le Slider avec sa barre et son curseur
+     * @param canvas
+     */
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -155,7 +195,11 @@ public class Slider extends View {
     }
 
 
-
+    /**
+     * Initialise le Slider(taille, couleur)
+     * @param context
+     * @param attrs
+     */
     private void init(Context context, AttributeSet attrs){
         mBarLength=dpToPixel(DEFAULT_BAR_LENGTH);
         mBarWidth=dpToPixel(DEFAULT_BAR_WIDTH);
@@ -199,6 +243,11 @@ public class Slider extends View {
         setMinimumHeight((int)dpToPixel(DEFAULT_BAR_LENGTH+getPaddingTop()+getPaddingBottom()+DEFAULT_CURSOR_DIAMETER));
     }
 
+    /**
+     * Permet de passer d'une valeur en dp en piwel
+     * @param valueInDp valeur en DP
+     * @return valeur convertie en pixel
+     */
     private float dpToPixel(float valueInDp){
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,valueInDp,getResources().getDisplayMetrics());
     }
@@ -248,6 +297,7 @@ public class Slider extends View {
             out.writeFloat(sliderValue);
         }
     }
+
     public interface SliderChangeListener{
         void onChange();
     }
